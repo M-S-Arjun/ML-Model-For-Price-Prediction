@@ -1,0 +1,81 @@
+import pandas as pd
+import numpy as np
+%matplotlib inline
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import metrics
+
+df=pd.read_csv('IBM_ORCL.csv')
+df.head()
+
+df.info()
+
+df.shape
+
+df.duplicated().sum().any()
+
+df.isnull().values.any()
+
+df.describe()
+
+import plotly.graph_objects as go
+figure=go.Figure(data=[go.Candlestick(x=df['Date'],open=df['Open'],high=df['High'],low=df['Low'],close=df['Close'])])
+figure.update_layout(title='IBM_ORCL',xaxis_rangeslider_visible=False)
+figure.show()
+
+df=df.drop(columns=['Stock'],axis=1)
+df.head()
+
+print(df.corr())
+
+plt.figure(figsize=(16,8))
+sns.heatmap(df.corr(),cmap='Blues',annot=True)
+plt.show()
+
+df['Open'].hist()
+
+df['Close'].hist()
+
+df['High'].hist()
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, accuracy_score,f1_score
+
+label_encoder = LabelEncoder()
+df['Open'] = label_encoder.fit_transform(df['Open'])
+df['High'] = label_encoder.fit_transform(df['High'])
+df['Low'] = label_encoder.fit_transform(df['Low'])
+correlation_matrix = df.corr()
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=.5)
+plt.title('Correlation Matrix')
+plt.show()
+
+x=df[['Open','High','Low','Volume']].values
+y=df['Close'].values
+
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.2,random_state=0)
+
+print('Train:',x_train.shape)
+
+print('Test:',x_test.shape)
+
+import statsmodels.api as sm
+from sklearn.linear_model import LinearRegression
+regressor = LinearRegression()
+model=regressor.fit(x_train,y_train)
+y_pred=regressor.predict(x_test)
+
+predicted = model.predict(x_test)
+
+print('Model Coefficients:',regressor.coef_)
+print('Model intercept:',regressor.intercept_)
+
+dframe=pd.DataFrame(y_test,predicted)
+dfr=pd.DataFrame({'Actual_Price':y_test,'Predicted_Price':predicted})
+print(dfr)
+
+residual=y_test-predicted
+sns.distplot(residual)
